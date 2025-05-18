@@ -55,12 +55,12 @@ const allAccidentRates: Record<string, number> = {
 
 export default function Dashboard() {
   const [searchParams] = useSearchParams()
-  const view         = (searchParams.get('view') as 'daily'|'monthly') || 'daily'
-  const date         = searchParams.get('date')   || ''
-  const month        = searchParams.get('month')  || ''
-  const region       = searchParams.get('region') || ''
-  const municipality = searchParams.get('municipality') || ''
-  const localArea    = searchParams.get('local')  || ''
+  const view= (searchParams.get('view') as 'daily'|'monthly') || 'daily'
+  const date= searchParams.get('date')   || ''
+  const month= searchParams.get('month')  || ''
+  const region= searchParams.get('region') || ''
+  const municipality= searchParams.get('municipality') || ''
+  const localArea= searchParams.get('local')  || ''
 
   const [trafficData, setTraffic] = useState<number[]>([])
   const [speedData,   setSpeed]   = useState<number[]>([])
@@ -122,7 +122,6 @@ export default function Dashboard() {
 
   return (
     <PageWrapper>
-      {/* LEFT: Daily Chart */}
       <Section>
         <SectionTitle>Daily</SectionTitle>
         <Card>
@@ -145,9 +144,8 @@ export default function Dashboard() {
       <Section>
         <SectionTitle>Monthly</SectionTitle>
         <MapContainer>
-          {view === 'monthly' && <MapView />}
+           <MapView />
         </MapContainer>
-
         <SectionTitle>Daily Accident Rate</SectionTitle>
         <DailyAccidentChart
           labels={accLabels}
