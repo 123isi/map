@@ -50,7 +50,7 @@ const allAccidentRates: Record<string, number> = {
   day13: 50, day14: 37, day15: 50,
   day16: 33, day17: 57, day18: 48,
   day19: 33, day20: 42, day21: 55,
-  day22: 60, day23: 52, /* 필요시 더 추가 */
+  day22: 60, day23: 52, 
 }
 
 export default function Dashboard() {
@@ -142,8 +142,6 @@ export default function Dashboard() {
           />
         </Card>
       </Section>
-
-      {/* CENTER */}
       <Section>
         <SectionTitle>Monthly</SectionTitle>
         <MapContainer>
@@ -156,8 +154,6 @@ export default function Dashboard() {
           data={accData}
         />
       </Section>
-
-      {/* RIGHT: Area */}
       <Section>
         <SectionTitle>Area</SectionTitle>
         <Sidebar />
