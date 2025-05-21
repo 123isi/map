@@ -43,31 +43,27 @@ function formatLabel(h: number) {
   return `${h12}${ampm}`
 }
 
-export default function Chart({ trafficData, speedData, vehicleShare }: ChartProps) {
+export default function Chart({
+  trafficData = Array(24).fill(null),
+  speedData   = Array(24).fill(null),
+  vehicleShare
+}: ChartProps) {
   const now         = new Date()
   const currentHour = now.getHours()
-  const windowSize  = 5
-  const currentIdx  = windowSize
+  const windowSize  = 10
 
   const labels: string[]              = []
   const histTraffic:  (number|null)[] = []
-  const predTraffic:  (number|null)[] = []
   const histSpeed:    (number|null)[] = []
-  const predSpeed:    (number|null)[] = []
 
-  for (let offset = -windowSize; offset <= windowSize; offset++) {
+  for (let offset = -windowSize; offset <= 0; offset++) {
     const h = (currentHour + offset + 24) % 24
     labels.push(formatLabel(h))
-    const t = trafficData[h] ?? null
-    const s = speedData[h]   ?? null
-    if (offset <= 0) {
-      histTraffic.push(t);  predTraffic.push(null)
-      histSpeed.push(s);    predSpeed.push(null)
-    } else {
-      histTraffic.push(null); predTraffic.push(t)
-      histSpeed.push(null);   predSpeed.push(s)
-    }
+    histTraffic.push(trafficData[h])
+    histSpeed.push(speedData[h])
   }
+
+  const currentIdx = labels.length - 1
 
   const commonOptions = {
     responsive: true,
@@ -90,7 +86,7 @@ export default function Chart({ trafficData, speedData, vehicleShare }: ChartPro
     },
     scales: {
       x: {
-        grid: { display: false },
+        grid: { display: true, color: '#eee' },
         ticks: {
           color: (ctx: any) =>
             ctx.index === currentIdx ? '#7E57C2' : '#999',
@@ -111,51 +107,32 @@ export default function Chart({ trafficData, speedData, vehicleShare }: ChartPro
     labels,
     datasets: [
       {
-        label: 'History',
+        label: 'Average Traffic',
         data: histTraffic,
         borderColor: '#8784FB',
         backgroundColor: 'rgba(207,206,253,0.6)',
         fill: true,
         tension: 0.4,
         pointRadius: 3
-      },
-      {
-        label: 'Prediction',
-        data: predTraffic,
-        borderColor: '#D48CFB',
-        backgroundColor: 'rgba(212,140,251,0.2)',
-        borderDash: [6, 4],
-        fill: true,
-        tension: 0.4,
-        pointRadius: 0
       }
     ]
   }
-  
+
   const speedChartData = {
     labels,
     datasets: [
       {
-        label: 'History',
+        label: 'Average Speed',
         data: histSpeed,
         borderColor: '#8784FB',
         backgroundColor: 'rgba(207,206,253,0.3)',
         fill: 'start' as const,
         tension: 0.4,
         pointRadius: 3
-      },
-      {
-        label: 'Prediction',
-        data: predSpeed,
-        borderColor: '#D48CFB',
-        backgroundColor: 'rgba(212,140,251,0.2)',
-        borderDash: [6, 4],
-        fill: 'start' as const,
-        tension: 0.4,
-        pointRadius: 0
       }
     ]
   }
+
   const pieData = {
     labels: vehicleShare.labels,
     datasets: [{
@@ -167,6 +144,7 @@ export default function Chart({ trafficData, speedData, vehicleShare }: ChartPro
       pointRadius: 8
     }]
   }
+
   const pieOptions = {
     responsive: true,
     plugins: {
@@ -186,11 +164,7 @@ export default function Chart({ trafficData, speedData, vehicleShare }: ChartPro
             <Line
               data={trafficChartData}
               options={commonOptions}
-              style={{
-                position: 'absolute',
-                top: 0, left: 0,
-                width: '100%', height: '100%'
-              }}
+              style={{ position:'absolute', top:0, left:0, width:'100%', height:'100%' }}
             />
           </ChartArea>
         </ChartBox>
@@ -200,11 +174,7 @@ export default function Chart({ trafficData, speedData, vehicleShare }: ChartPro
             <Line
               data={speedChartData}
               options={commonOptions}
-              style={{
-                position: 'absolute',
-                top: 0, left: 0,
-                width: '100%', height: '100%'
-              }}
+              style={{ position:'absolute', top:0, left:0, width:'100%', height:'100%' }}
             />
           </ChartArea>
         </ChartBox>
@@ -239,7 +209,6 @@ const ChartBox = styled.div`
 `
 
 const ChartArea = styled.div`
-  /* flex 자식이 부모 높이를 상속받도록 */
   height: 0;
   flex: 1;
   min-height: 0;

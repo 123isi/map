@@ -1,4 +1,3 @@
-// src/components/DailyAccidentChart.tsx
 import React, { useMemo } from 'react'
 import {
   Chart as ChartJS,
@@ -22,37 +21,27 @@ ChartJS.register(
 )
 
 interface Props {
-  // 원본에 오늘을 포함한 일부만 들어와도 상관없습니다
-  labels: string[]    // ex: ['day13','day14',…,'day21']
-  data:    number[]   // ex: [50,37,…,55]
+  labels: string[]
+  data:    number[]
 }
 
 export default function DailyAccidentChart({ labels, data }: Props) {
-  const today = new Date().getDate()           
-  // 원본 배열에서 today의 값이 있는지 확인
-  const todayIdx = labels.findIndex(l =>
-    parseInt(l.replace(/\D/g, ''), 10) === today
-  )
-  // (없어도 괜찮습니다 — 그냥 0으로 처리할 거예요.)
+  const today = new Date().getDate()
 
-  // 1) winLabels: 오늘 기준 ±4일 라벨 생성
+  // 과거 8일 + 오늘 (총 9일)
   const windowSize = 9
-  const half = Math.floor(windowSize / 2)      // 4
   const winLabels = Array.from({ length: windowSize }, (_, i) => {
-    const day = today + (i - half)
+    const day = today - (windowSize - 1 - i)
     return `day${day}`
   })
+  // 오늘은 마지막 인덱스
+  const winTodayIdx = windowSize - 1
 
-  // 2) winData: winLabels 각 항목에 대해 원본 data에서 찾아서, 없으면 0
   const winData = winLabels.map(lbl => {
     const idx = labels.indexOf(lbl)
     return idx >= 0 ? data[idx] : 0
   })
 
-  // 3) 오늘(정가운데) 강조 인덱스
-  const winTodayIdx = half
-
-  // 4) 차트 데이터 & 옵션
   const chartData = {
     labels: winLabels,
     datasets: [{

@@ -18,18 +18,54 @@ import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png'
 import shadowUrl from 'leaflet/dist/images/marker-shadow.png'
 L.Icon.Default.mergeOptions({ iconRetinaUrl, iconUrl, shadowUrl })
 
+
 type Category = 'accident' | 'highRisk' | 'unexpected'
 
-export default function MapView() {
+// 새로 추가: API 이벤트 타입
+interface TrafficEvent {
+  eventType: string
+  eventDetailType: string
+  startDate: string
+  coordX: string
+  coordY: string
+}
+interface MapViewProps {
+  onMarkerClick: (lat: number, lng: number) => void
+}
+export default function MapView({ onMarkerClick }: MapViewProps) {
   const [geoData, setGeoData] = useState<GeoJsonObject | null>(null)
   const [activeCategory, setActiveCategory] = useState<Category>('accident')
-
+  const [events, setEvents] = useState<TrafficEvent[]>([])
   useEffect(() => {
     fetch(
       'https://raw.githubusercontent.com/southkorea/southkorea-maps/master/kostat/2018/json/skorea-provinces-2018-geo.json'
     )
       .then(res => (res.ok ? res.json() : Promise.reject(res.status)))
       .then(data => setGeoData(data))
+      .catch(console.error)
+  }, [])
+
+  useEffect(() => {
+    fetch('http://localhost:8000/traffic-events')
+      .then(res => {
+        if (!res.ok) return Promise.reject(res.status)
+        return res.json()
+      })
+      .then((data: any) => {
+        let list: TrafficEvent[] = []
+
+        if (Array.isArray(data)) {
+          // 응답이 배열일 때
+          list = data
+        } else if (Array.isArray(data.events)) {
+          // 응답이 { events: [...] } 형태일 때
+          list = data.events
+        } else {
+          console.warn('Unexpected traffic-events response:', data)
+        }
+
+        setEvents(list)
+      })
       .catch(console.error)
   }, [])
 
@@ -49,11 +85,6 @@ export default function MapView() {
     highRisk:   ['#FFF3E0','#FB8C00'],
     unexpected: ['#E1F5FE','#039BE5']
   }
-
-  const centers = geoData.features.map((f, i) => {
-    const { lat, lng } = L.geoJSON(f).getBounds().getCenter()
-    return { key: i, name: f.properties?.name as string, lat, lng }
-  })
 
   const getStyle = (feat: Feature) => {
     const name = feat.properties?.name as string
@@ -103,22 +134,20 @@ export default function MapView() {
         <MapContainer center={[36.5,127.5]} zoom={7} style={{ width: '100%', height: '100%' }}>
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           <GeoJSON data={geoData} style={getStyle} />
-          {centers.map(({ key, name, lat, lng }) => {
-            let show = false
-            if (activeCategory === 'accident')   show = stateStatus[name] === 'bad'
-            else if (activeCategory === 'highRisk') show = highRiskRegions.includes(name)
-            else                                 show = unexpectedRegions.includes(name)
-            if (!show) return null
 
-            const iconUrl = icons[activeCategory][0]
+        
+          {events.map((ev, idx) => {
+            const lat = parseFloat(ev.coordY)
+            const lng = parseFloat(ev.coordX)
             return (
               <Marker
-                key={key}
-                position={[lat, lng]}
-                icon={L.icon({ iconUrl, iconSize: [24,24], iconAnchor:[12,12] })}
-              />
+  position={[lat, lng]}
+  eventHandlers={{ click: () => onMarkerClick(lat, lng) }}
+/>
             )
+          
           })}
+
         </MapContainer>
       </MapWrapper>
     </Container>
@@ -160,8 +189,8 @@ const Icon = styled.img`
 `
 const MapWrapper = styled.div`
   width: 100%;
-  height: 400px;        /* 원하는 높이 조정 */
-  border-top: none;     /* LegendBar 와 매끄럽게 이어짐 */
+  height: 400px;
+  border-top: none;
   border-radius: 0 0 8px 8px;
   overflow: hidden;
 `
