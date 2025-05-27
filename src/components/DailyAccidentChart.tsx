@@ -25,16 +25,14 @@ interface Props {
   data:    number[]
 }
 
-export default function DailyAccidentChart({ labels, data }: Props) {
+export default function DailyAccidentChart({ labels, data }: Props ) {
   const today = new Date().getDate()
 
-  // 과거 8일 + 오늘 (총 9일)
   const windowSize = 9
   const winLabels = Array.from({ length: windowSize }, (_, i) => {
     const day = today - (windowSize - 1 - i)
     return `day${day}`
   })
-  // 오늘은 마지막 인덱스
   const winTodayIdx = windowSize - 1
 
   const winData = winLabels.map(lbl => {

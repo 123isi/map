@@ -14,7 +14,8 @@ import {
 import annotationPlugin from 'chartjs-plugin-annotation'
 import { Line, Pie } from 'react-chartjs-2'
 import styled from '@emotion/styled'
-
+import axios from 'axios'
+import { useEffect,useState } from 'react'
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -62,9 +63,21 @@ export default function Chart({
     histTraffic.push(trafficData[h])
     histSpeed.push(speedData[h])
   }
-
+  const [data, setData] = useState<any>(null)
+  const [error, setError] = useState<string|null>(null)
   const currentIdx = labels.length - 1
-
+  useEffect(() => {
+    axios.get('/traffic/vehicle-type-share')
+      .then(res => {
+        console.log('API 응답 전체:', res)
+        console.log('res.data:', res.data)
+        setData(res.data)
+      })
+      .catch(err => {
+        console.error('API 호출 실패:', err)
+        setError('데이터 로드에 실패했습니다')
+      })
+  }, [])
   const commonOptions = {
     responsive: true,
     maintainAspectRatio: false,

@@ -1,4 +1,3 @@
-// src/components/CCTV.tsx
 import React, { useEffect, useRef } from 'react'
 import Hls from 'hls.js'
 import styled from '@emotion/styled'

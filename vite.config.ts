@@ -1,17 +1,18 @@
 // vite.config.ts
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: '0.0.0.0',      // 또는 true
-    port: 5173,
-    strictPort: true,
-    // 여기에 접속하려는 호스트를 추가하세요
-    allowedHosts: ['local.kakao.test'],
     proxy: {
-      '/vworld': { /* …기존 프록시 설정… */ }
+      // axios.get('/traffic/average-stats') 요청을
+      // http://127.0.0.1:8000/traffic/average-stats 로 프록시
+      '/traffic': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        secure: false
+      }
     }
-  },
-});
+  }
+})

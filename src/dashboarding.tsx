@@ -75,6 +75,8 @@ type CCTVItem = {
 export default function Dashboard() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const region = searchParams.get('region')
+
   const view = (searchParams.get('view') as 'daily' | 'monthly') ?? 'daily'
   const [selectedCCTV, setSelectedCCTV] = useState<CCTVItem | null>(null)
 
@@ -88,47 +90,56 @@ export default function Dashboard() {
 			console.error(e);
 		}
 	};
-
+  
+  const [count, setCount] = useState<number | null>(null);
   const [dailyTraffic, setDailyTraffic] = useState<number[]>([])
   const [speedData, setSpeedData] = useState<number[]>([])
   const [vehicleShare, setVehicleShare] = useState<{ labels: string[]; data: number[] }>({
     labels: [], data: []
   })
-
-  // API 응답 저장용
   const [cityTrafficList, setCityTrafficList] = useState<CityTraffic[]>([])
   const [apiDate, setApiDate] = useState<string>('')
-
-  // 1) 트래픽 API 호출
   useEffect(() => {
-    axios.get<TrafficResponse>('http://localhost:8000/traffic')
-      .then(res => {
-        setCityTrafficList(res.data.cities)
-        setApiDate(res.data.date)
-      })
-      .catch(console.error)
-  }, [])
-
-  // 2) view 변화에 따른 더미 데이터 세팅
-  useEffect(() => {
-    if (view === 'daily') {
-      setDailyTraffic([120,135,150,145,160,175,190,205,180,165,150,140,130,120,115,110,105,100,95,90,85,80,75,70])
-      setSpeedData   ([60,62,65,63,67,70,72,75,73,70,68,66,64,62,60,58,56,54,52,50,48,46,44,42])
-      setVehicleShare({
-        labels: ['Passenger Car','Motorcycle','Bus','Freight Vehicle'],
-        data:   [35,20,15,30]
-      })
-    } else {
-      setDailyTraffic([100,120,130,140,150,160,170,180,190,200,210,220,230,240,250,240,230,220,210,200,190,180,170,160])
-      setSpeedData   ([50,55,58,60,62,65,67,70,68,66,64,62,60,58,55,53,52,50,48,46,44,42,40,38])
-      setVehicleShare({
-        labels: ['Passenger Car','Motorcycle','Bus','Freight Vehicle'],
-        data:   [30,25,20,25]
-      })
+    if (!region) return;              
+    else{
+      console.log("hello")
     }
+    axios
+      .get('/traffic/hourly', {
+        params: { region },
+      })
+      .then(res => {
+        console.log(res.data);
+      })
+      .catch(err => {
+        console.error('교통 이벤트 213조회 실패', err.response?.status, err.response?.data);
+      });
+  }, [region]);  
+  useEffect(() => {
+    console.log("region:", region);
+  if (!region) return;
+
+    axios.get('/traffic-events/daily-count', {
+      params: { region },   
+    })
+    .then(res => {
+      console.log(res.data);   
+      setCount(res.data.count);
+    })
+    .catch(err => {
+      console.error('교통 이벤트 조회 실패', err);
+    });
+  }, [region]);
+  
+  useEffect(() => {
+    axios.get('/traffic/average-stats', {
+      params: { region },   
+    })
+    .then(res=>{
+      console.log(res.data);  
+    })
   }, [view])
 
-  // 3) Daily Accident Rate Chart용 레이블 & 데이터 (오늘 기준 앞 8일 + 오늘)
   const { labels: accLabels, data: accData } = useMemo(() => {
     const today = new Date().getDate()
     const windowSize = 9
